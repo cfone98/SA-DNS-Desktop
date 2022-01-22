@@ -108,16 +108,16 @@ def home():
             break
         elif event == '-TOGGLE-GRAPHIC-':   # if the graphical button that changes images
             graphic_off = not graphic_off
-            window['-TOGGLE-GRAPHIC-'].update(image_filename= r'C:\Users\CFONe\Documents\STUDY\SEM 7\FYP\Ui\icons\off.png' if graphic_off else r'C:\Users\CFONe\Documents\STUDY\SEM 7\FYP\Ui\icons\on.png')
+            window['-TOGGLE-GRAPHIC-'].update(image_filename= r'.\Images\off.png' if graphic_off else r'.\Images\on.png')
             if graphic_off == False:
                 print('SA DNS Filter is enabled!! ')
-                window['shld'].update( filename = r'C:\Users\CFONe\Pictures\shldon.png')
+                window['shld'].update( filename = r'.\Images\shldon.png')
                 window.refresh()
                 s.system('netsh interface ip set dns name="Ethernet" static 185.37.37.37')
                 
             else:
                 print('SA DNS Filter is disbled!! ')
-                window['shld'].update( filename = r'C:\Users\CFONe\Pictures\shldoff.png')
+                window['shld'].update( filename = r'.\Images\shldoff.png')
                 window.refresh()
                 s.system('netsh interface ip set dnsservers name="Ethernet" source=dhcp')
                 
@@ -183,7 +183,7 @@ def login():
     sg.theme_text_color('#2EBCBC')
     sg.theme_button_color(['Black','#2EBCBC'])
     layout = [
-            [sg.Image(r'C:\Users\CFONe\Pictures\shield3.png', pad =(70,10) )],
+            [sg.Image(r'.\Images\shield3.png', pad =(70,10) )],
             [sg.Text("Log In")],
             [sg.Text("Username")],
             [sg.InputText(key='-usrnm-')],
