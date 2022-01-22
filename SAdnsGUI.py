@@ -73,8 +73,8 @@ def home():
             ],
             title='Output', relief=sg.RELIEF_SUNKEN),
             sg.Frame(layout= [
-                [sg.Image(r'C:\Users\CFONe\Pictures\shldoff.png', pad =(70,10), key = 'shld' )],
-                [sg.Button(pad = ((68,0),(0,5)), image_filename = r'C:\Users\CFONe\Documents\STUDY\SEM 7\FYP\Ui\icons\off.png', key='-TOGGLE-GRAPHIC-', button_color=(sg.theme_background_color(), sg.theme_background_color()), border_width=0)]
+                [sg.Image(r'.\Images\shldoff.png', pad =(70,10), key = 'shld' )],
+                [sg.Button(pad = ((68,0),(0,5)), image_filename = r'.\Images\off.png', key='-TOGGLE-GRAPHIC-', button_color=(sg.theme_background_color(), sg.theme_background_color()), border_width=0)]
                 ,#[sg.Button('Off', button_color= 'white on red',size=(3, 1),  key='-B-'),  sg.Button('Exit')]
                 ],
                 title= 'State', relief = sg.RELIEF_SUNKEN, pad = ((60,0),(0,0)))],
