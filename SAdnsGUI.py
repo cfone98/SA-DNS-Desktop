@@ -78,9 +78,8 @@ def home():
                 ],
                 title= 'State', relief = sg.RELIEF_SUNKEN, pad = ((60,0),(0,0)))],
         [sg.Frame(layout=[
-        [sg.Checkbox('Adult Content/Pornography', key = '-cat1-' , enable_events = True),  sg.Checkbox('Gambling')],
-        [sg.Checkbox('Social Media' ),  sg.Checkbox('Fake News',pad = ((85,0),(0,0)))],
-        [sg.Checkbox('Torrent/File-sharing' ),  sg.Checkbox('Malware', pad = (50,0))],
+        [sg.Checkbox('Adult', key = '-cat1-' , enable_events = True),  sg.Checkbox('Gambling', pad = ((85,0),(0,0)))],
+        [sg.Checkbox('Social Media'),  sg.Checkbox('Security', pad = ((85,0),(0,0)))],
         [sg.Text('Enable SafeSearch:'),sg.Radio('Yes! ', "RADIO1", default=True, ), sg.Radio('No!', "RADIO1")]
         ],
         title='Categories', relief=sg.RELIEF_SUNKEN, tooltip='Use these to set flags'),
@@ -93,7 +92,7 @@ def home():
         ],relief=sg.RELIEF_SUNKEN, title='')
         ],
             [sg.Button('Save Settings', key = '-sv-')]
-            ]
+    ]
            
 
     
