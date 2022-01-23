@@ -79,7 +79,7 @@ def home():
                 title= 'State', relief = sg.RELIEF_SUNKEN, pad = ((60,0),(0,0)))],
         [sg.Frame(layout=[
         [sg.Checkbox('Adult', key = '-cat1-' , enable_events = True),  sg.Checkbox('Gambling', pad = ((85,0),(0,0)))],
-        [sg.Checkbox('Social Media'),  sg.Checkbox('Security', pad = ((85,0),(0,0)))],
+        [sg.Checkbox('Social Media'),  sg.Checkbox('Security', pad = ((40,0),(0,0)))],
         [sg.Text('Enable SafeSearch:'),sg.Radio('Yes! ', "RADIO1", default=True, ), sg.Radio('No!', "RADIO1")]
         ],
         title='Categories', relief=sg.RELIEF_SUNKEN, tooltip='Use these to set flags'),
@@ -97,7 +97,7 @@ def home():
 
     
 
-    window = sg.Window('SA DNS', layout, enable_close_attempted_event=True, size=(1366, 768), icon='./Images/favicon.ico')
+    window = sg.Window('SA DNS', layout, enable_close_attempted_event=True, size=(700,400), icon='./Images/favicon.ico')
     down = graphic_off = True
     while True:
         event, values = window.read()
