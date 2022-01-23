@@ -10,7 +10,7 @@ import ctypes, sys
 import subprocess
 
 #sg.theme_previewer()
-
+print("Hello World")
 
 
 def is_admin():
