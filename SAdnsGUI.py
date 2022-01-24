@@ -10,6 +10,7 @@ import ctypes, sys
 import subprocess
 import sys
 
+
 my_theme = {'BACKGROUND': '#0E345E',
             'TEXT': 'white',
             'INPUT': 'white',
@@ -34,6 +35,7 @@ def is_admin():
 
 def home():
 
+    print(username)
     sg.theme_add_new('MyTheme', my_theme)
     sg.theme('MyTheme') 
     # sg.theme_element_text_color ('#2EBCBC') 
@@ -48,8 +50,8 @@ def home():
             ['&Help', '&About...'], ]
 
     today = date.today()
-    top_banner = [[sg.Text('SA DNS Dashboard'+ ' '*24, font='Any 20', background_color=DARK_HEADER_COLOR, text_color = WHITE),
-               sg.Text(today.strftime("%B %d, %Y"), font='Any 20', background_color=DARK_HEADER_COLOR, text_color = WHITE)]]
+    top_banner = [[sg.Text('SA DNS Dashboard'+ ' '*24, font='Any 20', background_color='#4998F2', text_color = WHITE),
+               sg.Text(today.strftime("%B %d, %Y"), font='Any 20', background_color='#4998F2', text_color = WHITE)]]
 
     homedash = [
         [sg.Text('Enter domain to be blacklisted:')],
@@ -66,7 +68,7 @@ def home():
 
     layout = [
         #[sg.Menu(menu_def, tearoff=True, text_color = '#2EBCBC')],
-        [sg.Column(top_banner, size=(700, 60), pad=(0,0), background_color=DARK_HEADER_COLOR)],
+        [sg.Column(top_banner, size=(700, 60), pad=(0,0), background_color='#4998F2')],
         [sg.Frame(layout=[
             [sg.Output(size=(45, 6), font=('Poppins 10'), pad = (10,10))]
             ],
@@ -78,8 +80,8 @@ def home():
                 ],
                 title= 'State', relief = sg.RELIEF_SUNKEN, pad = ((60,0),(0,0)))],
         [sg.Frame(layout=[
-        [sg.Checkbox('Adult', key = '-cat1-' , enable_events = True),  sg.Checkbox('Gambling', pad = ((85,0),(0,0)))],
-        [sg.Checkbox('Social Media'),  sg.Checkbox('Security', pad = ((40,0),(0,0)))],
+        [sg.Checkbox('Adult', key = '-adult-' , enable_events = True),  sg.Checkbox('Gambling', key = '-gamba-', pad = ((85,0),(0,0)) ,enable_events = True)],
+        [sg.Checkbox('Social Media',key = '-socmed-',enable_events = True ),  sg.Checkbox('Security (Malware)',key = '-sec-' , enable_events = True, pad = ((40,0),(0,0)))],
         [sg.Text('Enable SafeSearch:'),sg.Radio('Yes! ', "RADIO1", default=True, ), sg.Radio('No!', "RADIO1")]
         ],
         title='Categories', relief=sg.RELIEF_SUNKEN, tooltip='Use these to set flags'),
@@ -124,13 +126,39 @@ def home():
             print('Your settings have been saved!')
             print(values)
             #send api to update settings and refresh dns server
-            subprocess.Popen("ssh {user}@{host} {cmd}".format(user="safwan", host="192.168.68.120", cmd='mkdir test'), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+            #subprocess.Popen("ssh {user}@{host} {cmd}".format(user="safwan", host="192.168.68.120", cmd='mkdir test'), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+        #When button ok in blacklist is pressed
         elif event == '-blok-':
             print(values['-bl-']+' has been added to blacklist.')
+        #When button ok in whitelist is pressed
         elif event == '-wlok-':
             print(values['-wl-']+' has been added to blacklist.')
-        elif event == '-cat1':
-            print('adult on')
+        #When tick button  ( Category Adult)
+        elif event == '-adult-':
+            if values["-adult-"] == True:
+                print('adult on')
+            else:
+                print('adult off')
+        #When tick button  ( Category Gambling)
+        elif event == '-gamba-':
+            if values["-gamba-"] == True:
+                print('gambling on')
+            else:
+                print('gambling off')
+        #When tick button  ( Category SocMed)
+        elif event == '-socmed-':
+            if values["-socmed-"] == True:
+                print('social media on')
+            else:
+                print('social media off')
+        #When tick button  ( Category Sec)
+        elif event == '-sec-':
+            if values["-sec-"] == True:
+                print('malware on')
+            else:
+                print('malware off')
+
+
             
             
     window.close()
@@ -140,7 +168,7 @@ def custom_meter_example(data):
     global  response
     # layout the form
     layout = [[sg.Text('Loggin you in...sit tight')],
-              [sg.ProgressBar(1, orientation='h', size=(20, 20), key='progress',bar_color='#2EBCBC')],
+              [sg.ProgressBar(1, orientation='h', size=(20, 20), key='progress', bar_color = ('#4998F2','#FFFFFF'))],
               [sg.Cancel()]]
 
     # create the form
@@ -172,18 +200,16 @@ loginstate = boolean
 
 data = {}
 response = ''
-
+token_out = ''
 
 def login():
-    global username,password,loginstate,data,response
+    global username,password,loginstate,data,response,token_out
     sg.theme_add_new('MyTheme', my_theme)
     sg.theme('MyTheme') 
-    # sg.theme_element_text_color ('#2EBCBC') 
-    # sg.theme_text_color('#0b112b')
-    # sg.theme_button_color(['White','#4998F2'])
+   
     layout = [
             [sg.Text("", justification='center', size=(100,1) )],
-            [sg.Image(r'.\Images\saDNS.png', pad =(150,1) )],
+            [sg.Image(r'.\Images\saDNS.png', pad =(100,1) )],
             [sg.Text("WELCOME TO SA DNS APPLICATION", justification='center', size=(100,1) )],
             [sg.Text("", justification='center', size=(100,1) )],
             [sg.Text("Log In", justification='center', size=(100,1) )],
@@ -194,7 +220,7 @@ def login():
             [sg.Button('Ok', bind_return_key= True),sg.Button('Cancel')]
             ]
 
-    window = sg.Window("SA DNS", layout,size=(400, 400), icon='./Images/favicon.ico')
+    window = sg.Window("SA DNS", layout,size=(300, 400), icon='./Images/favicon.ico')
 
     while True:
         event,values = window.read()
@@ -208,6 +234,7 @@ def login():
             "username": values['-usrnm-'],
             "password": values['-pwd-']
         }
+            
             try:
                 custom_meter_example(data)
                 #response = requests.post(
@@ -229,7 +256,7 @@ def login():
     window.close()
 
  
-#'''
+
 is_admin()
 if is_admin():
     login()
@@ -238,17 +265,40 @@ if is_admin():
 
 else:
     ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
-#'''
-#login()
-#home()
 
-'''
-if __name__ == '__main__':
-    home()
 
-    ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
-'''  
-'''
-python .\manage.py runserver
+"""
+START API Function
+"""
+# Get the all Profile Config
+def getProfileConfig(access_token):
+  url = "https://sadns.herokuapp.com/api/profileConfig/"
+  token = "Bearer " + str(access_token)
+  print(token)
+  headers = {
+    "Authorization": token
+  }
+  response = requests.request("GET", url, headers=headers)
+  jsonResponse = response.json()
+  print(response)
+  for x in jsonResponse:
+    print(x)
 
-'''
+def putProfileConfig(access_token):
+    url = "https://sadns.herokuapp.com/api/profileConfig/b312bd93-e0f8-49b7-b5c2-5218056f8611"
+
+    payload = {
+        "cat_status" : "false"
+    }
+    token = "Bearer " + str(access_token)
+    headers = {
+        "Authorization": token
+    }
+    response = requests.request("PUT", url, headers=headers, data=payload)
+    print(response.text)
+
+"""
+END API Function
+"""
+
+
