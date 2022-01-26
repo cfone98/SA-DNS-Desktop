@@ -105,12 +105,14 @@ def home():
             graphic_off = not graphic_off
             window['-TOGGLE-GRAPHIC-'].update(image_filename= r'.\Images\off.png' if graphic_off else r'.\Images\on.png')
             if graphic_off == False:
+                # Do something When SADNS Filter On
                 print('SA DNS Filter is enabled!! ')
                 window['shld'].update( filename = r'.\Images\shldon.png')
                 window.refresh()
+                # In production later use static 185.37.37.37 | For testing use 8.8.8.8 Google DNS 
                 s.system('netsh interface ip set dns name="Ethernet" static 185.37.37.37')
-                
             else:
+                # Do something When SADNS Filter Off
                 print('SA DNS Filter is disbled!! ')
                 window['shld'].update( filename = r'.\Images\shldoff.png')
                 window.refresh()
