@@ -1,3 +1,4 @@
+from msilib.schema import tables
 from pickle import TRUE
 from tkinter import Image
 from xmlrpc.client import boolean
@@ -9,10 +10,16 @@ import os as s
 import ctypes, sys
 import subprocess
 import sys
+import paramiko
 
 #Global Variable
 username, password, loginstate = '', '', boolean
 data, response, access_token = {}, '', ''
+
+hostname = '192.168.68.120' 
+myuser   = 'safwan'
+mySSHK   = r'C:\Users\CFONe\.ssh\id_rsa.pub'
+
 
 # Global theme
 my_theme = {'BACKGROUND': '#0E345E',
@@ -47,7 +54,7 @@ def home():
             ['&Help', '&About...'], ]
 
     today = date.today()
-    top_banner = [[sg.Text('SA DNS Dashboard'+ ' '*24, font='Any 20', background_color='#4998F2', text_color = WHITE),
+    top_banner = [[sg.Text('SA DNS Dashboard'+ ' '*22, font='Any 20', background_color='#4998F2', text_color = WHITE),
                sg.Text(today.strftime("%B %d, %Y"), font='Any 20', background_color='#4998F2', text_color = WHITE)]]
 
     homedash = [
@@ -64,7 +71,7 @@ def home():
     cmd3 = "systemctl stop named"
 
     layout = [
-        #[sg.Menu(menu_def, tearoff=True, text_color = '#2EBCBC')],
+        [sg.Menu(menu_def, tearoff=True, text_color = '#2EBCBC')],
         [sg.Column(top_banner, size=(700, 60), pad=(0,0), background_color='#4998F2')],
         [sg.Frame(layout=[
             [sg.Output(size=(45, 6), font=('Poppins 10'), pad = (10,10))]
@@ -83,10 +90,10 @@ def home():
         ],
         title='Categories', relief=sg.RELIEF_SUNKEN, tooltip='Use these to set flags'),
         sg.Frame(layout =[
-            [sg.TabGroup([[sg.Tab('Blacklist', homedash,  key='-mykey-', title_color = '#2EBCBC' ),
-                         sg.Tab('Whitelist', settingdash,title_color = '#2EBCBC')]],
+            [sg.TabGroup([[sg.Tab('Blacklist', homedash,  key='-mykey-', title_color = 'white' ),
+                         sg.Tab('Whitelist', settingdash,title_color = 'white')]],
                         
-                       key='-group1-',title_color = '#2EBCBC', pad = ((10,10),(10,10)),
+                       key='-group1-',title_color = 'white',tab_background_color = '#0E345E' ,selected_background_color = '#4998F2' , pad = ((10,10),(10,10)),
                         )]
         ],relief=sg.RELIEF_SUNKEN, title='')
         ],
@@ -123,7 +130,8 @@ def home():
             print('Your settings have been saved!')
             print(values)
             #send api to update settings and refresh dns server
-            #subprocess.Popen("ssh {user}@{host} {cmd}".format(user="safwan", host="192.168.68.120", cmd='mkdir test'), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+            ssh_cmnd()
+            
         #When button ok in blacklist is pressed
         elif event == '-blok-':
             print(values['-bl-']+' has been added to blacklist.')
@@ -284,6 +292,16 @@ def main():
             home()
     else:
         ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
+
+def ssh_cmnd():
+    ssh   = paramiko.SSHClient()  # will create the object
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy()) # no known_hosts error
+    ssh.connect(hostname, username=myuser, key_filename=mySSHK) 
+
+    stdin, stdout, stderr = ssh.exec_command("sudo -S  -p '' python3 /var/named/adultlist.py")
+    stdin.write("Opcar123\n")
+    stdin.flush()
+    ssh.close()
 
 if __name__ == "__main__":
     main()
