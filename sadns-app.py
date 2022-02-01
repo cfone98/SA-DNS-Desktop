@@ -1,3 +1,4 @@
+import dnsquery
 from pickle import TRUE
 from tkinter import Image
 from xmlrpc.client import boolean
@@ -9,10 +10,13 @@ import os as s
 import ctypes, sys
 import subprocess
 import sys
+from threading import Thread
 
 #Global Variable
 username, password, loginstate = '', '', boolean
 data, response, access_token = {}, '', ''
+
+status_adult, status_safesearch, status_socialmedia, status_gambling, status_malware = False, False, False, False, False
 
 # Global theme
 my_theme = {'BACKGROUND': '#0E345E',
@@ -35,7 +39,7 @@ def is_admin():
         return False
 
 def home():
-
+    global access_token, status_adult, status_safesearch, status_socialmedia, status_gambling, status_malware, username
     sg.theme_add_new('MyTheme', my_theme)
     sg.theme('MyTheme') 
         
@@ -77,9 +81,9 @@ def home():
                 ],
                 title= 'State', relief = sg.RELIEF_SUNKEN, pad = ((60,0),(0,0)))],
         [sg.Frame(layout=[
-        [sg.Checkbox('Adult', key = '-adult-' , enable_events = True),  sg.Checkbox('Gambling', key = '-gamba-', pad = ((85,0),(0,0)) ,enable_events = True)],
-        [sg.Checkbox('Social Media',key = '-socmed-',enable_events = True ),  sg.Checkbox('Security (Malware)',key = '-sec-' , enable_events = True, pad = ((40,0),(0,0)))],
-        [sg.Text('Enable SafeSearch:'),sg.Radio('Yes! ', "RADIO1", default=True, ), sg.Radio('No!', "RADIO1")]
+        [sg.Checkbox('Adult', key = '-adult-' , default=status_adult, enable_events = True),  sg.Checkbox('Gambling', key = '-gamba-', pad = ((85,0),(0,0)) , default=status_gambling, enable_events = True)],
+        [sg.Checkbox('Social Media',key = '-socmed-', default=status_socialmedia, enable_events = True ),  sg.Checkbox('Security (Malware)',key = '-sec-' , default=status_malware, enable_events = True, pad = ((40,0),(0,0)))],
+        [sg.Text('Enable SafeSearch:'),sg.Radio('Yes! ', "RADIO1", default=status_safesearch, ), sg.Radio('No!', "RADIO1")]
         ],
         title='Categories', relief=sg.RELIEF_SUNKEN, tooltip='Use these to set flags'),
         sg.Frame(layout =[
@@ -96,6 +100,15 @@ def home():
 
     window = sg.Window('SA DNS', layout, enable_close_attempted_event=True, size=(700,400), icon='./Images/favicon.ico')
     down = graphic_off = True
+    # Get profile config user
+    jsonResponse = getProfileConfig(access_token)
+    adult = jsonResponse[0]['id']
+    safesearch = jsonResponse[1]['id']
+    socialmedia = jsonResponse[2]['id']
+    gambling = jsonResponse[3]['id']
+    malware = jsonResponse[4]['id']
+    # command = 'python dnsquery.py -d ' + username + '.sqlite'
+    # os.system(command)
     while True:
         event, values = window.read()
         
@@ -105,15 +118,27 @@ def home():
             graphic_off = not graphic_off
             window['-TOGGLE-GRAPHIC-'].update(image_filename= r'.\Images\off.png' if graphic_off else r'.\Images\on.png')
             if graphic_off == False:
+                # Do something When SADNS Filter On
                 print('SA DNS Filter is enabled!! ')
                 window['shld'].update( filename = r'.\Images\shldon.png')
                 window.refresh()
-                s.system('netsh interface ip set dns name="Ethernet" static 185.37.37.37')
-                
+                # In production later use static 185.37.37.37 | For testing use 8.8.8.8 Google DNS 
+                command = username + '.sqlite'
+                # print(command)
+                s.system('netsh interface ip set dns name="Ethernet" static 8.8.8.8')
+                # os.exec(command)
+                p = subprocess.Popen(['python', 'dnsquery.py', '-d', command], shell=True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+                out, err = p.communicate()
+                print('Output: ', out )
+                print('Error: ', err )
+                print('returncode: ', p.returncode )
+
             else:
+                # Do something When SADNS Filter Off
                 print('SA DNS Filter is disbled!! ')
                 window['shld'].update( filename = r'.\Images\shldoff.png')
                 window.refresh()
+                # os.system("taskkill /im dnsquery.py")
                 s.system('netsh interface ip set dnsservers name="Ethernet" source=dhcp')
                 
 
@@ -131,27 +156,43 @@ def home():
         #When tick button  ( Category Adult)
         elif event == '-adult-':
             if values["-adult-"] == True:
-                print('adult on')
+                print('Enable selected category : Adult set to On')
+                status = "True"
+                putProfileConfig(access_token, adult, status)
             else:
-                print('adult off')
+                print('Disable selected category : Adult set to Off')
+                status = "False"
+                putProfileConfig(access_token, adult, status)
         #When tick button  ( Category Gambling)
         elif event == '-gamba-':
             if values["-gamba-"] == True:
-                print('gambling on')
+                print('Enable selected category : Gambling set to On')
+                status = "True"
+                putProfileConfig(access_token, gambling, status)
             else:
-                print('gambling off')
+                print('Disable selected category : Gambling set to Off')
+                status = "False"
+                putProfileConfig(access_token, gambling, status)
         #When tick button  ( Category SocMed)
         elif event == '-socmed-':
             if values["-socmed-"] == True:
-                print('social media on')
+                print('Enable selected category : Social Media set to On')
+                status = "True"
+                putProfileConfig(access_token, socialmedia, status)
             else:
-                print('social media off')
+                print('Disable selected category : Social Media set to Off')
+                status = "False"
+                putProfileConfig(access_token, socialmedia, status)
         #When tick button  ( Category Sec)
         elif event == '-sec-':
             if values["-sec-"] == True:
-                print('malware on')
+                print('Enable selected category : Malware set to On')
+                status = "True"
+                putProfileConfig(access_token, malware, status)
             else:
-                print('malware off')
+                print('Disable selected category : Malware set to Off')
+                status = "False"
+                putProfileConfig(access_token, malware, status)
     
     # Close the window if user Click 'X'
     window.close()
@@ -221,7 +262,7 @@ def login():
                 "username": values['-usrnm-'],
                 "password": values['-pwd-']
             }
-            
+            username = values['-usrnm-']
             try:
                 custom_meter_example(data)                
                 response_dict = json.loads(response.text)
@@ -248,14 +289,12 @@ def getProfileConfig(access_token):
   }
   response = requests.request("GET", url, headers=headers)
   jsonResponse = response.json()
-  print(response)
-  for x in jsonResponse:
-    print(x)
+  return jsonResponse
 
 # Adjust certain profile config
 def putProfileConfig(access_token, id, status):
-    id = ''
-    status = ''
+    id = id #UUID
+    status = status #string
     url = "https://sadns.herokuapp.com/api/profileConfig/" + id
 
     payload = {
@@ -270,7 +309,7 @@ def putProfileConfig(access_token, id, status):
 
 """Start main application"""
 def main():
-    # This bit gets the taskbar icon working properly in Windows
+    global status_adult, status_safesearch, status_socialmedia, status_gambling, status_malware
     if sys.platform.startswith('win'):
         import ctypes
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(u'CompanyName.ProductName.SubProduct.VersionInformation') # Arbitrary string`
@@ -278,6 +317,14 @@ def main():
     is_admin()
     if is_admin():
         login()
+        # Set Profile Config Status by default
+        jsonResponse = getProfileConfig(access_token)
+        status_adult = jsonResponse[0]['cat_status']
+        status_safesearch = jsonResponse[1]['cat_status']
+        status_socialmedia = jsonResponse[2]['cat_status']
+        status_gambling = jsonResponse[3]['cat_status']
+        status_malware = jsonResponse[4]['cat_status']
+
         if loginstate == TRUE:
             home()
     else:
