@@ -89,7 +89,7 @@ def home():
         [sg.Frame(layout=[
         [sg.Checkbox('Adult', key = '-adult-' , default=status_adult, enable_events = True),  sg.Checkbox('Gambling', key = '-gamba-', pad = ((85,0),(0,0)) , default=status_gambling, enable_events = True)],
         [sg.Checkbox('Social Media',key = '-socmed-', default=status_socialmedia, enable_events = True ),  sg.Checkbox('Security (Malware)',key = '-sec-' , default=status_malware, enable_events = True, pad = ((40,0),(0,0)))],
-        [sg.Text('Enable SafeSearch:'),sg.Radio('Yes! ', "RADIO1", default=status_safesearch, ), sg.Radio('No!', "RADIO1")]
+        [sg.Text('Enable SafeSearch:'),sg.Radio('Yes! ', "RADIO1", default=status_safesearch, key = '-sson-', enable_events = True ), sg.Radio('No!', "RADIO1",key = '-ssoff-', default=not(status_safesearch), enable_events = True)]
         ],
         title='Categories', relief=sg.RELIEF_SUNKEN, tooltip='Use these to set flags'),
         sg.Frame(layout =[
@@ -133,11 +133,13 @@ def home():
                 # print(command)
                 s.system('netsh interface ip set dns name="Ethernet" static 8.8.8.8')
                 # os.exec(command)
+                '''
                 p = subprocess.Popen(['python', 'dnsquery.py', '-d', command], shell=True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
                 out, err = p.communicate()
                 print('Output: ', out )
                 print('Error: ', err )
                 print('returncode: ', p.returncode )
+                '''
 
             else:
                 # Do something When SADNS Filter Off
@@ -163,43 +165,51 @@ def home():
         #When tick button  ( Category Adult)
         elif event == '-adult-':
             if values["-adult-"] == True:
-                print('Enable selected category : Adult set to On')
+                print('Enable selected category : Adult is set to On')
                 status = "True"
                 putProfileConfig(access_token, adult, status)
             else:
-                print('Disable selected category : Adult set to Off')
+                print('Disable selected category : Adult is set to Off')
                 status = "False"
                 putProfileConfig(access_token, adult, status)
         #When tick button  ( Category Gambling)
         elif event == '-gamba-':
             if values["-gamba-"] == True:
-                print('Enable selected category : Gambling set to On')
+                print('Enable selected category : Gambling is set to On')
                 status = "True"
                 putProfileConfig(access_token, gambling, status)
             else:
-                print('Disable selected category : Gambling set to Off')
+                print('Disable selected category : Gambling is set to Off')
                 status = "False"
                 putProfileConfig(access_token, gambling, status)
         #When tick button  ( Category SocMed)
         elif event == '-socmed-':
             if values["-socmed-"] == True:
-                print('Enable selected category : Social Media set to On')
+                print('Enable selected category : Social Media is set to On')
                 status = "True"
                 putProfileConfig(access_token, socialmedia, status)
             else:
-                print('Disable selected category : Social Media set to Off')
+                print('Disable selected category : Social Media is set to Off')
                 status = "False"
                 putProfileConfig(access_token, socialmedia, status)
         #When tick button  ( Category Sec)
         elif event == '-sec-':
             if values["-sec-"] == True:
-                print('Enable selected category : Malware set to On')
+                print('Enable selected category : Malware is set to On')
                 status = "True"
                 putProfileConfig(access_token, malware, status)
             else:
-                print('Disable selected category : Malware set to Off')
+                print('Disable selected category : Malware is set to Off')
                 status = "False"
                 putProfileConfig(access_token, malware, status)
+        elif event == '-sson-':
+                print(' Safesearch is set to On')
+                status = "True"
+                putProfileConfig(access_token, safesearch, status)
+        elif event == '-ssoff-':
+                print(' Safesearch is set to Off')
+                status = "False"
+                putProfileConfig(access_token, safesearch, status)
     
     # Close the window if user Click 'X'
     window.close()
