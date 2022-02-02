@@ -1,2 +1,6 @@
 
 *.sqlite
+helloworld.py
+rewritecsv.py
+*.csv
+helloworld.py
