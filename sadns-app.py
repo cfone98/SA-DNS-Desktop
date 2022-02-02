@@ -135,7 +135,7 @@ def home():
                 window['shld'].update( filename = r'.\Images\shldon.png')
                 window.refresh()
                 # In production later use static 185.37.37.37 | For testing use 8.8.8.8 Google DNS 
-                s.system('netsh interface ip set dns name="Ethernet" static 8.8.8.8')
+                s.system('netsh interface ip set dns name="Wi-Fi" static 192.168.68.120')
                 process = subprocess.Popen(["env/Scripts/python", "dnsquery.py", "-d", dbuser])
 
             else:
@@ -144,21 +144,25 @@ def home():
                 window['shld'].update( filename = r'.\Images\shldoff.png')
                 window.refresh()
                 process = subprocess.Popen(["./env/Scripts/python", "dnsquery.py", "-d", dbuser, "-e", csv_user])
-                s.system('netsh interface ip set dnsservers name="Ethernet" source=dhcp')
+                s.system('netsh interface ip set dnsservers name="Wi-Fi" source=dhcp')
                 
 
         elif event == '-sv-':
             print('Your settings have been saved!')
-            print(values)
-            #send api to update settings and refresh dns server
+            #print(values)
+            #send ssh command to run script
             ssh_cmnd()
-            
+            sg.popup_auto_close("Your settings have been Saved!!", icon='./Images/favicon.ico')
+
+        #send api to update settings and refresh dns server     
         #When button ok in blacklist is pressed
         elif event == '-blok-':
             print(values['-bl-']+' has been added to blacklist.')
+            putBlacklist(access_token,values['-bl-'])
         #When button ok in whitelist is pressed
         elif event == '-wlok-':
-            print(values['-wl-']+' has been added to blacklist.')
+            print(values['-wl-']+' has been added to whitelist.')
+            putWhitelist(access_token,values['-wl-'])
         #When tick button  ( Category Adult)
         elif event == '-adult-':
             if values["-adult-"] == True:
@@ -321,6 +325,34 @@ def putProfileConfig(access_token, id, status):
         "Authorization": token
     }
     response = requests.request("PUT", url, headers=headers, data=payload)
+
+def putBlacklist(access_token, domainbl):
+    domainbl = domainbl #string
+    url = "https://sadns.herokuapp.com/api/blacklist/"
+
+    payload = {
+        "bl_domain" : domainbl,
+        "bl_comment": ''
+    }
+    token = "Bearer " + str(access_token)
+    headers = {
+        "Authorization": token
+    }
+    response = requests.request("POST", url, headers=headers, data=payload)
+
+def putWhitelist(access_token, domainwl):
+    domainwl = domainwl #string
+    url = "https://sadns.herokuapp.com/api/whitelist/"
+
+    payload = {
+        "wl_domain" : domainwl,
+        "wl_comment": ''
+    }
+    token = "Bearer " + str(access_token)
+    headers = {
+        "Authorization": token
+    }
+    response = requests.request("POST", url, headers=headers, data=payload)
 """END API Function"""
 
 """START Essential Function"""
@@ -329,7 +361,7 @@ def ssh_cmnd():
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy()) # no known_hosts error
     ssh.connect(hostname, username=myuser, key_filename=mySSHK) 
 
-    stdin, stdout, stderr = ssh.exec_command("sudo -S  -p '' python3 /var/named/adultlist.py")
+    stdin, stdout, stderr = ssh.exec_command("sudo -S  -p '' python3 /home/safwan/Documents/FYP/user.py")
     stdin.write("Opcar123\n")
     stdin.flush()
     ssh.close()
