@@ -50,7 +50,7 @@ def process(pkt):
 			databaseConn.commit()
 
 		if not quiet:
-			system('clear')
+			# system('clear')
 			print("{:15s} | {:15s} | {:15s} | {}".format("IP source", "DNS server", "Count DNS request", "Query"))
 			for ip in queries_liste:
 				print("{:15s}".format(ip)) # IP source
@@ -128,7 +128,7 @@ if __name__ == "__main__":
 			exit("\033[31mYou need to setup python3-scapy\033[0m\nsudo apt install python3-scapy")
 
 		if not quiet:
-			system('clear')
+			# system('clear')
 			print("{:15s} | {:15s} | {:15s} | {}".format("IP source", "DNS server", "Count DNS request", "Query"))
 
 		if iface != "":

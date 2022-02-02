@@ -132,12 +132,15 @@ def home():
                 command = username + '.sqlite'
                 # print(command)
                 s.system('netsh interface ip set dns name="Ethernet" static 8.8.8.8')
+                # runCommand(cmd=values['python helloworld.py'], window=window)
+                # execute_py_file('dnsquery.py', '-d', command, wait = True)
+                # execute_py_file('helloworld.py')
                 # os.exec(command)
-                p = subprocess.Popen(['python', 'dnsquery.py', '-d', command], shell=True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-                out, err = p.communicate()
-                print('Output: ', out )
-                print('Error: ', err )
-                print('returncode: ', p.returncode )
+                # p = subprocess.Popen(['python', 'dnsquery.py', '-d', command], shell=True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+                # out, err = p.communicate()
+                # print('Output: ', out )
+                # print('Error: ', err )
+                # print('returncode: ', p.returncode )
 
             else:
                 # Do something When SADNS Filter Off
@@ -324,15 +327,15 @@ def main():
     is_admin()
     if is_admin():
         login()
-        # Set Profile Config Status by default
-        jsonResponse = getProfileConfig(access_token)
-        status_adult = jsonResponse[0]['cat_status']
-        status_safesearch = jsonResponse[1]['cat_status']
-        status_socialmedia = jsonResponse[2]['cat_status']
-        status_gambling = jsonResponse[3]['cat_status']
-        status_malware = jsonResponse[4]['cat_status']
 
         if loginstate == TRUE:
+            # Set Profile Config Status by default
+            jsonResponse = getProfileConfig(access_token)
+            status_adult = jsonResponse[0]['cat_status']
+            status_safesearch = jsonResponse[1]['cat_status']
+            status_socialmedia = jsonResponse[2]['cat_status']
+            status_gambling = jsonResponse[3]['cat_status']
+            status_malware = jsonResponse[4]['cat_status']
             home()
     else:
         ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
@@ -346,6 +349,17 @@ def ssh_cmnd():
     stdin.write("Opcar123\n")
     stdin.flush()
     ssh.close()
+
+def runCommand(cmd, timeout=None, window=None):
+    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    output = ''
+    for line in p.stdout:
+        line = line.decode(errors='replace' if (sys.version_info) < (3, 5) else 'backslashreplace').rstrip()
+        output += line
+        print(line)
+        window.Refresh() if window else None        # yes, a 1-line if, so shoot me
+    retval = p.wait(timeout)
+    return (retval, output)         
 
 if __name__ == "__main__":
     main()
