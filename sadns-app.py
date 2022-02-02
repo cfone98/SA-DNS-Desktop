@@ -13,6 +13,8 @@ import subprocess
 import sys
 import paramiko
 from threading import Thread
+import signal
+import pandas as pd
 
 #Global Variable
 username, password, loginstate = '', '', boolean
@@ -23,6 +25,7 @@ myuser   = 'safwan'
 mySSHK   = r'C:\Users\CFONe\.ssh\id_rsa.pub'
 
 status_adult, status_safesearch, status_socialmedia, status_gambling, status_malware = False, False, False, False, False
+# End Global variable
 
 # Global theme
 my_theme = {'BACKGROUND': '#0E345E',
@@ -37,13 +40,13 @@ my_theme = {'BACKGROUND': '#0E345E',
             'PROGRESS_DEPTH': 0}
 
 
-
 def is_admin():
     try:
         return ctypes.windll.shell32.IsUserAnAdmin()
     except:
         return False
 
+"""START Home aka Dashboard for SA DNS Main Dekstop application"""
 def home():
     global access_token, status_adult, status_safesearch, status_socialmedia, status_gambling, status_malware, username
     sg.theme_add_new('MyTheme', my_theme)
@@ -113,6 +116,9 @@ def home():
     socialmedia = jsonResponse[2]['id']
     gambling = jsonResponse[3]['id']
     malware = jsonResponse[4]['id']
+    dbuser = username + ".sqlite"
+    csv_user = username + ".csv"
+
     # command = 'python dnsquery.py -d ' + username + '.sqlite'
     # os.system(command)
     while True:
@@ -129,24 +135,15 @@ def home():
                 window['shld'].update( filename = r'.\Images\shldon.png')
                 window.refresh()
                 # In production later use static 185.37.37.37 | For testing use 8.8.8.8 Google DNS 
-                command = username + '.sqlite'
-                # print(command)
                 s.system('netsh interface ip set dns name="Ethernet" static 8.8.8.8')
-                # os.exec(command)
-                '''
-                p = subprocess.Popen(['python', 'dnsquery.py', '-d', command], shell=True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-                out, err = p.communicate()
-                print('Output: ', out )
-                print('Error: ', err )
-                print('returncode: ', p.returncode )
-                '''
+                process = subprocess.Popen(["env/Scripts/python", "dnsquery.py", "-d", dbuser])
 
             else:
                 # Do something When SADNS Filter Off
                 print('SA DNS Filter is disbled!! ')
                 window['shld'].update( filename = r'.\Images\shldoff.png')
                 window.refresh()
-                # os.system("taskkill /im dnsquery.py")
+                process = subprocess.Popen(["./env/Scripts/python", "dnsquery.py", "-d", dbuser, "-e", csv_user])
                 s.system('netsh interface ip set dnsservers name="Ethernet" source=dhcp')
                 
 
@@ -211,8 +208,10 @@ def home():
                 status = "False"
                 putProfileConfig(access_token, safesearch, status)
     
+    process = subprocess.Popen(["./env/Scripts/python", "dnsquery.py", "-d", dbuser, "-e", csv_user])
     # Close the window if user Click 'X'
     window.close()
+"""ENDING Home aka Dashboard for SA DNS Main Dekstop application"""
   
 """START Loading animation when login into the application"""
 def custom_meter_example(data):
@@ -324,6 +323,29 @@ def putProfileConfig(access_token, id, status):
     response = requests.request("PUT", url, headers=headers, data=payload)
 """END API Function"""
 
+"""START Essential Function"""
+def ssh_cmnd():
+    ssh   = paramiko.SSHClient()  # will create the object
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy()) # no known_hosts error
+    ssh.connect(hostname, username=myuser, key_filename=mySSHK) 
+
+    stdin, stdout, stderr = ssh.exec_command("sudo -S  -p '' python3 /var/named/adultlist.py")
+    stdin.write("Opcar123\n")
+    stdin.flush()
+    ssh.close()
+
+def runCommand(cmd, timeout=None, window=None):
+    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    output = ''
+    for line in p.stdout:
+        line = line.decode(errors='replace' if (sys.version_info) < (3, 5) else 'backslashreplace').rstrip()
+        output += line
+        print(line)
+        window.Refresh() if window else None        # yes, a 1-line if, so shoot me
+    retval = p.wait(timeout)
+    return (retval, output)         
+"""END Essential Function"""
+
 """Start main application"""
 def main():
     global status_adult, status_safesearch, status_socialmedia, status_gambling, status_malware
@@ -334,28 +356,18 @@ def main():
     is_admin()
     if is_admin():
         login()
-        # Set Profile Config Status by default
-        jsonResponse = getProfileConfig(access_token)
-        status_adult = jsonResponse[0]['cat_status']
-        status_safesearch = jsonResponse[1]['cat_status']
-        status_socialmedia = jsonResponse[2]['cat_status']
-        status_gambling = jsonResponse[3]['cat_status']
-        status_malware = jsonResponse[4]['cat_status']
 
         if loginstate == TRUE:
+            # Set Profile Config Status by default
+            jsonResponse = getProfileConfig(access_token)
+            status_adult = jsonResponse[0]['cat_status']
+            status_safesearch = jsonResponse[1]['cat_status']
+            status_socialmedia = jsonResponse[2]['cat_status']
+            status_gambling = jsonResponse[3]['cat_status']
+            status_malware = jsonResponse[4]['cat_status']
             home()
     else:
         ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
-
-def ssh_cmnd():
-    ssh   = paramiko.SSHClient()  # will create the object
-    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy()) # no known_hosts error
-    ssh.connect(hostname, username=myuser, key_filename=mySSHK) 
-
-    stdin, stdout, stderr = ssh.exec_command("sudo -S  -p '' python3 /var/named/adultlist.py")
-    stdin.write("Opcar123\n")
-    stdin.flush()
-    ssh.close()
 
 if __name__ == "__main__":
     main()
