@@ -14,7 +14,7 @@ import sys
 import paramiko
 from threading import Thread
 import signal
-import pandas as pd
+
 
 #Global Variable
 username, password, loginstate = '', '', boolean
@@ -118,9 +118,7 @@ def home():
     malware = jsonResponse[4]['id']
     dbuser = username + ".sqlite"
     csv_user = username + ".csv"
-
-    # command = 'python dnsquery.py -d ' + username + '.sqlite'
-    # os.system(command)
+    
     while True:
         event, values = window.read()
         
@@ -364,18 +362,7 @@ def ssh_cmnd():
     stdin, stdout, stderr = ssh.exec_command("sudo -S  -p '' python3 /home/safwan/Documents/FYP/user.py")
     stdin.write("Opcar123\n")
     stdin.flush()
-    ssh.close()
-
-def runCommand(cmd, timeout=None, window=None):
-    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    output = ''
-    for line in p.stdout:
-        line = line.decode(errors='replace' if (sys.version_info) < (3, 5) else 'backslashreplace').rstrip()
-        output += line
-        print(line)
-        window.Refresh() if window else None        # yes, a 1-line if, so shoot me
-    retval = p.wait(timeout)
-    return (retval, output)         
+    ssh.close()       
 """END Essential Function"""
 
 """Start main application"""
