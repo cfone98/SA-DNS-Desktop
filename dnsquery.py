@@ -5,6 +5,14 @@
 
 from os import system
 from optparse import OptionParser
+""""""
+from scapy.all import sniff
+from scapy.all import ARP
+from scapy.all import DNSQR
+from scapy.all import UDP
+from scapy.all import IP
+from scapy.all import IPv6
+from scapy.all import DNS
 
 queries_liste = {}
 quiet = False
@@ -51,6 +59,7 @@ def process(pkt):
 
 		if not quiet:
 			system('clear')
+			system('cls')
 			print("{:15s} | {:15s} | {:15s} | {}".format("IP source", "DNS server", "Count DNS request", "Query"))
 			for ip in queries_liste:
 				print("{:15s}".format(ip)) # IP source
@@ -111,24 +120,27 @@ if __name__ == "__main__":
 		data = databaseCursor.fetchall()
 		import csv
 		with open(options.exportPath, 'w') as f:
-		    writer = csv.writer(f, delimiter=';')
-		    writer.writerows([( 'domain', 'ipFrom', 'ipTo', 'count')])
+		    # writer = csv.writer(f, delimiter=';')
+		    writer = csv.writer(f)
+		    writer.writerows([('domain', 'ipFrom', 'ipTo', 'count')])
 		    writer.writerows(data)
 	else:
-		try:
-			from scapy.all import sniff
-			from scapy.all import ARP
-			from scapy.all import DNSQR
-			from scapy.all import UDP
-			from scapy.all import IP
-			from scapy.all import IPv6
-			from scapy.all import DNS
-		except ImportError:
-			from sys import exit
-			exit("\033[31mYou need to setup python3-scapy\033[0m\nsudo apt install python3-scapy")
+		# continue
+		# try:
+		from scapy.all import sniff
+		from scapy.all import ARP
+		from scapy.all import DNSQR
+		from scapy.all import UDP
+		from scapy.all import IP
+		from scapy.all import IPv6
+		from scapy.all import DNS
+		# except ImportError:
+		# 	from sys import exit
+		# 	exit("\033[31mYou need to setup python3-scapy\033[0m\nsudo apt install python3-scapy")
 
 		if not quiet:
 			system('clear')
+			system('cls')
 			print("{:15s} | {:15s} | {:15s} | {}".format("IP source", "DNS server", "Count DNS request", "Query"))
 
 		if iface != "":

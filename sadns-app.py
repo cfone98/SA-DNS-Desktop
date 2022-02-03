@@ -1,3 +1,4 @@
+from msilib.schema import tables
 import dnsquery
 from pickle import TRUE
 from tkinter import Image
@@ -9,14 +10,23 @@ from datetime import date
 import os as s
 import ctypes, sys
 import subprocess
+from subprocess import check_output
 import sys
+import paramiko
 from threading import Thread
+import signal
+
 
 #Global Variable
 username, password, loginstate = '', '', boolean
 data, response, access_token = {}, '', ''
 
+hostname = '192.168.68.120' 
+myuser   = 'safwan'
+mySSHK   = r'C:\Users\CFONe\.ssh\id_rsa.pub'
+
 status_adult, status_safesearch, status_socialmedia, status_gambling, status_malware = False, False, False, False, False
+# End Global variable
 
 # Global theme
 my_theme = {'BACKGROUND': '#0E345E',
@@ -31,13 +41,13 @@ my_theme = {'BACKGROUND': '#0E345E',
             'PROGRESS_DEPTH': 0}
 
 
-
 def is_admin():
     try:
         return ctypes.windll.shell32.IsUserAnAdmin()
     except:
         return False
 
+"""START Home aka Dashboard for SA DNS Main Dekstop application"""
 def home():
     global access_token, status_adult, status_safesearch, status_socialmedia, status_gambling, status_malware, username
     sg.theme_add_new('MyTheme', my_theme)
@@ -51,7 +61,7 @@ def home():
             ['&Help', '&About...'], ]
 
     today = date.today()
-    top_banner = [[sg.Text('SA DNS Dashboard'+ ' '*24, font='Any 20', background_color='#4998F2', text_color = WHITE),
+    top_banner = [[sg.Text('SA DNS Dashboard'+ ' '*22, font='Any 20', background_color='#4998F2', text_color = WHITE),
                sg.Text(today.strftime("%B %d, %Y"), font='Any 20', background_color='#4998F2', text_color = WHITE)]]
 
     homedash = [
@@ -68,7 +78,7 @@ def home():
     cmd3 = "systemctl stop named"
 
     layout = [
-        #[sg.Menu(menu_def, tearoff=True, text_color = '#2EBCBC')],
+        [sg.Menu(menu_def, tearoff=True, text_color = '#2EBCBC')],
         [sg.Column(top_banner, size=(700, 60), pad=(0,0), background_color='#4998F2')],
         [sg.Frame(layout=[
             [sg.Output(size=(45, 6), font=('Poppins 10'), pad = (10,10))]
@@ -83,18 +93,23 @@ def home():
         [sg.Frame(layout=[
         [sg.Checkbox('Adult', key = '-adult-' , default=status_adult, enable_events = True),  sg.Checkbox('Gambling', key = '-gamba-', pad = ((85,0),(0,0)) , default=status_gambling, enable_events = True)],
         [sg.Checkbox('Social Media',key = '-socmed-', default=status_socialmedia, enable_events = True ),  sg.Checkbox('Security (Malware)',key = '-sec-' , default=status_malware, enable_events = True, pad = ((40,0),(0,0)))],
-        [sg.Text('Enable SafeSearch:'),sg.Radio('Yes! ', "RADIO1", default=status_safesearch, ), sg.Radio('No!', "RADIO1")]
+        [sg.Text('Enable SafeSearch:'),sg.Radio('Yes! ', "RADIO1", default=status_safesearch, key = '-sson-', enable_events = True ), sg.Radio('No!', "RADIO1",key = '-ssoff-', default=not(status_safesearch), enable_events = True)]
         ],
         title='Categories', relief=sg.RELIEF_SUNKEN, tooltip='Use these to set flags'),
         sg.Frame(layout =[
-            [sg.TabGroup([[sg.Tab('Blacklist', homedash,  key='-mykey-', title_color = '#2EBCBC' ),
-                         sg.Tab('Whitelist', settingdash,title_color = '#2EBCBC')]],
+            [sg.TabGroup([[sg.Tab('Blacklist', homedash,  key='-mykey-', title_color = 'white' ),
+                         sg.Tab('Whitelist', settingdash,title_color = 'white')]],
                         
-                       key='-group1-',title_color = '#2EBCBC', pad = ((10,10),(10,10)),
+                       key='-group1-',title_color = 'white',tab_background_color = '#0E345E' ,selected_background_color = '#4998F2' , pad = ((10,10),(10,10)),
                         )]
         ],relief=sg.RELIEF_SUNKEN, title='')
         ],
-            [sg.Button('Save Settings', key = '-sv-')]
+        [
+            sg.Button('Save Settings', key = '-sv-'), 
+            sg.Button('Update Domain (History)', key = '-udh-'),
+            sg.Button('Update/Create Domain data (Live)', key = '-ucddl-'),
+            sg.Button('Upload Domain (Live)', key = '-udl-'),
+        ]
     ]
            
 
@@ -107,8 +122,9 @@ def home():
     socialmedia = jsonResponse[2]['id']
     gambling = jsonResponse[3]['id']
     malware = jsonResponse[4]['id']
-    # command = 'python dnsquery.py -d ' + username + '.sqlite'
-    # os.system(command)
+    dbuser = username + ".sqlite"
+    csv_user = username + ".csv"
+    
     while True:
         event, values = window.read()
         
@@ -122,80 +138,101 @@ def home():
                 print('SA DNS Filter is enabled!! ')
                 window['shld'].update( filename = r'.\Images\shldon.png')
                 window.refresh()
-                # In production later use static 185.37.37.37 | For testing use 8.8.8.8 Google DNS 
-                command = username + '.sqlite'
-                # print(command)
+                """
+                In production later use static dns server (eg:192.168.68.120) | For testing use 8.8.8.8 Google DNS 
+                """
+                # s.system('netsh interface ip set dns name="Wi-Fi" static 192.168.68.120')
                 s.system('netsh interface ip set dns name="Ethernet" static 8.8.8.8')
-                # os.exec(command)
-                p = subprocess.Popen(['python', 'dnsquery.py', '-d', command], shell=True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-                out, err = p.communicate()
-                print('Output: ', out )
-                print('Error: ', err )
-                print('returncode: ', p.returncode )
+                process = subprocess.Popen(["env/Scripts/python", "dnsquery.py", "-d", dbuser])
 
             else:
                 # Do something When SADNS Filter Off
                 print('SA DNS Filter is disbled!! ')
                 window['shld'].update( filename = r'.\Images\shldoff.png')
                 window.refresh()
-                # os.system("taskkill /im dnsquery.py")
                 s.system('netsh interface ip set dnsservers name="Ethernet" source=dhcp')
+                # process = subprocess.Popen(["./env/Scripts/python", "dnsquery.py", "-d", dbuser, "-e", csv_user])
+                # process2 = subprocess.Popen(["./env/Scripts/python", "updateDomain.py", csv_user, access_token])
+                # s.system('netsh interface ip set dnsservers name="Wi-Fi" source=dhcp')
                 
 
         elif event == '-sv-':
             print('Your settings have been saved!')
-            print(values)
-            #send api to update settings and refresh dns server
-            #subprocess.Popen("ssh {user}@{host} {cmd}".format(user="safwan", host="192.168.68.120", cmd='mkdir test'), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+            #print(values)
+            #send ssh command to run script
+            ssh_cmnd()
+            sg.popup_auto_close("Your settings have been Saved!!", icon='./Images/favicon.ico')
+        elif event == '-udh-': # Update Domain (History) aka browser history
+            print('Update domain(history) to dashboard')
+            process_udh = subprocess.Popen(["./env/Scripts/python", "updateDomainHistory.py", access_token])
+        elif event == '-ucddl-': # Update/Create Domain Data (Live)
+            print('Update or Create Domain data from live dns query')
+            process_ucddl = subprocess.Popen(["./env/Scripts/python", "dnsquery.py", "-d", dbuser, "-e", csv_user])
+        elif event == '-udl-': # Upload Domain (Live)
+            print('Updating domain to dashboard...')
+            process_udl = subprocess.Popen(["./env/Scripts/python", "updateDomain.py", csv_user, access_token])
+        #send api to update settings and refresh dns server     
         #When button ok in blacklist is pressed
         elif event == '-blok-':
             print(values['-bl-']+' has been added to blacklist.')
+            putBlacklist(access_token,values['-bl-'])
         #When button ok in whitelist is pressed
         elif event == '-wlok-':
-            print(values['-wl-']+' has been added to blacklist.')
+            print(values['-wl-']+' has been added to whitelist.')
+            putWhitelist(access_token,values['-wl-'])
         #When tick button  ( Category Adult)
         elif event == '-adult-':
             if values["-adult-"] == True:
-                print('Enable selected category : Adult set to On')
+                print('Enable selected category : Adult is set to On')
                 status = "True"
                 putProfileConfig(access_token, adult, status)
             else:
-                print('Disable selected category : Adult set to Off')
+                print('Disable selected category : Adult is set to Off')
                 status = "False"
                 putProfileConfig(access_token, adult, status)
         #When tick button  ( Category Gambling)
         elif event == '-gamba-':
             if values["-gamba-"] == True:
-                print('Enable selected category : Gambling set to On')
+                print('Enable selected category : Gambling is set to On')
                 status = "True"
                 putProfileConfig(access_token, gambling, status)
             else:
-                print('Disable selected category : Gambling set to Off')
+                print('Disable selected category : Gambling is set to Off')
                 status = "False"
                 putProfileConfig(access_token, gambling, status)
         #When tick button  ( Category SocMed)
         elif event == '-socmed-':
             if values["-socmed-"] == True:
-                print('Enable selected category : Social Media set to On')
+                print('Enable selected category : Social Media is set to On')
                 status = "True"
                 putProfileConfig(access_token, socialmedia, status)
             else:
-                print('Disable selected category : Social Media set to Off')
+                print('Disable selected category : Social Media is set to Off')
                 status = "False"
                 putProfileConfig(access_token, socialmedia, status)
         #When tick button  ( Category Sec)
         elif event == '-sec-':
             if values["-sec-"] == True:
-                print('Enable selected category : Malware set to On')
+                print('Enable selected category : Malware is set to On')
                 status = "True"
                 putProfileConfig(access_token, malware, status)
             else:
-                print('Disable selected category : Malware set to Off')
+                print('Disable selected category : Malware is set to Off')
                 status = "False"
                 putProfileConfig(access_token, malware, status)
+        elif event == '-sson-':
+                print(' Safesearch is set to On')
+                status = "True"
+                putProfileConfig(access_token, safesearch, status)
+        elif event == '-ssoff-':
+                print(' Safesearch is set to Off')
+                status = "False"
+                putProfileConfig(access_token, safesearch, status)
     
+    # process = subprocess.Popen(["./env/Scripts/python", "dnsquery.py", "-d", dbuser, "-e", csv_user])
     # Close the window if user Click 'X'
     window.close()
+"""ENDING Home aka Dashboard for SA DNS Main Dekstop application"""
   
 """START Loading animation when login into the application"""
 def custom_meter_example(data):
@@ -305,7 +342,47 @@ def putProfileConfig(access_token, id, status):
         "Authorization": token
     }
     response = requests.request("PUT", url, headers=headers, data=payload)
+
+def putBlacklist(access_token, domainbl):
+    domainbl = domainbl #string
+    url = "https://sadns.herokuapp.com/api/blacklist/"
+
+    payload = {
+        "bl_domain" : domainbl,
+        "bl_comment": ''
+    }
+    token = "Bearer " + str(access_token)
+    headers = {
+        "Authorization": token
+    }
+    response = requests.request("POST", url, headers=headers, data=payload)
+
+def putWhitelist(access_token, domainwl):
+    domainwl = domainwl #string
+    url = "https://sadns.herokuapp.com/api/whitelist/"
+
+    payload = {
+        "wl_domain" : domainwl,
+        "wl_comment": ''
+    }
+    token = "Bearer " + str(access_token)
+    headers = {
+        "Authorization": token
+    }
+    response = requests.request("POST", url, headers=headers, data=payload)
 """END API Function"""
+
+"""START Essential Function"""
+def ssh_cmnd():
+    ssh   = paramiko.SSHClient()  # will create the object
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy()) # no known_hosts error
+    ssh.connect(hostname, username=myuser, key_filename=mySSHK) 
+
+    stdin, stdout, stderr = ssh.exec_command("sudo -S  -p '' python3 /home/safwan/Documents/FYP/user.py")
+    stdin.write("Opcar123\n")
+    stdin.flush()
+    ssh.close()
+"""END Essential Function"""
 
 """Start main application"""
 def main():
@@ -317,15 +394,15 @@ def main():
     is_admin()
     if is_admin():
         login()
-        # Set Profile Config Status by default
-        jsonResponse = getProfileConfig(access_token)
-        status_adult = jsonResponse[0]['cat_status']
-        status_safesearch = jsonResponse[1]['cat_status']
-        status_socialmedia = jsonResponse[2]['cat_status']
-        status_gambling = jsonResponse[3]['cat_status']
-        status_malware = jsonResponse[4]['cat_status']
 
         if loginstate == TRUE:
+            # Set Profile Config Status by default
+            jsonResponse = getProfileConfig(access_token)
+            status_adult = jsonResponse[0]['cat_status']
+            status_safesearch = jsonResponse[1]['cat_status']
+            status_socialmedia = jsonResponse[2]['cat_status']
+            status_gambling = jsonResponse[3]['cat_status']
+            status_malware = jsonResponse[4]['cat_status']
             home()
     else:
         ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
