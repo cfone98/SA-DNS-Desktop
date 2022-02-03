@@ -10,6 +10,7 @@ from datetime import date
 import os as s
 import ctypes, sys
 import subprocess
+from subprocess import check_output
 import sys
 import paramiko
 from threading import Thread
@@ -103,7 +104,12 @@ def home():
                         )]
         ],relief=sg.RELIEF_SUNKEN, title='')
         ],
-            [sg.Button('Save Settings', key = '-sv-')]
+        [
+            sg.Button('Save Settings', key = '-sv-'), 
+            sg.Button('Update Domain (History)', key = '-udh-'),
+            sg.Button('Update/Create Domain data (Live)', key = '-ucddl-'),
+            sg.Button('Upload Domain (Live)', key = '-udl-'),
+        ]
     ]
            
 
@@ -132,8 +138,11 @@ def home():
                 print('SA DNS Filter is enabled!! ')
                 window['shld'].update( filename = r'.\Images\shldon.png')
                 window.refresh()
-                # In production later use static 185.37.37.37 | For testing use 8.8.8.8 Google DNS 
-                s.system('netsh interface ip set dns name="Wi-Fi" static 192.168.68.120')
+                """
+                In production later use static dns server (eg:192.168.68.120) | For testing use 8.8.8.8 Google DNS 
+                """
+                # s.system('netsh interface ip set dns name="Wi-Fi" static 192.168.68.120')
+                s.system('netsh interface ip set dns name="Ethernet" static 8.8.8.8')
                 process = subprocess.Popen(["env/Scripts/python", "dnsquery.py", "-d", dbuser])
 
             else:
@@ -141,8 +150,10 @@ def home():
                 print('SA DNS Filter is disbled!! ')
                 window['shld'].update( filename = r'.\Images\shldoff.png')
                 window.refresh()
-                process = subprocess.Popen(["./env/Scripts/python", "dnsquery.py", "-d", dbuser, "-e", csv_user])
-                s.system('netsh interface ip set dnsservers name="Wi-Fi" source=dhcp')
+                s.system('netsh interface ip set dnsservers name="Ethernet" source=dhcp')
+                # process = subprocess.Popen(["./env/Scripts/python", "dnsquery.py", "-d", dbuser, "-e", csv_user])
+                # process2 = subprocess.Popen(["./env/Scripts/python", "updateDomain.py", csv_user, access_token])
+                # s.system('netsh interface ip set dnsservers name="Wi-Fi" source=dhcp')
                 
 
         elif event == '-sv-':
@@ -151,7 +162,15 @@ def home():
             #send ssh command to run script
             ssh_cmnd()
             sg.popup_auto_close("Your settings have been Saved!!", icon='./Images/favicon.ico')
-
+        elif event == '-udh-': # Update Domain (History) aka browser history
+            print('Update domain(history) to dashboard')
+            process_udh = subprocess.Popen(["./env/Scripts/python", "updateDomainHistory.py", access_token])
+        elif event == '-ucddl-': # Update/Create Domain Data (Live)
+            print('Update or Create Domain data from live dns query')
+            process_ucddl = subprocess.Popen(["./env/Scripts/python", "dnsquery.py", "-d", dbuser, "-e", csv_user])
+        elif event == '-udl-': # Upload Domain (Live)
+            print('Updating domain to dashboard...')
+            process_udl = subprocess.Popen(["./env/Scripts/python", "updateDomain.py", csv_user, access_token])
         #send api to update settings and refresh dns server     
         #When button ok in blacklist is pressed
         elif event == '-blok-':
@@ -210,7 +229,7 @@ def home():
                 status = "False"
                 putProfileConfig(access_token, safesearch, status)
     
-    process = subprocess.Popen(["./env/Scripts/python", "dnsquery.py", "-d", dbuser, "-e", csv_user])
+    # process = subprocess.Popen(["./env/Scripts/python", "dnsquery.py", "-d", dbuser, "-e", csv_user])
     # Close the window if user Click 'X'
     window.close()
 """ENDING Home aka Dashboard for SA DNS Main Dekstop application"""
@@ -362,7 +381,7 @@ def ssh_cmnd():
     stdin, stdout, stderr = ssh.exec_command("sudo -S  -p '' python3 /home/safwan/Documents/FYP/user.py")
     stdin.write("Opcar123\n")
     stdin.flush()
-    ssh.close()       
+    ssh.close()
 """END Essential Function"""
 
 """Start main application"""
