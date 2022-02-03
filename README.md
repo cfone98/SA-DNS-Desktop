@@ -40,3 +40,9 @@ Main dashboard for user use the features
 ##### Enable DNS Filter
 ![enter image description here](https://i.imgur.com/R4vbkr7.png)
 
+
+###### Bug Fixes pyinstaller for Python 3.10 and Pyinstaller 4.8
+[Tuple index out of range with Python 3.10 and pyinstaller 5.0.dev0 #6301](https://github.com/pyinstaller/pyinstaller/issues/6301)
+
+
+
