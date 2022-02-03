@@ -15,6 +15,7 @@ import sys
 import paramiko
 from threading import Thread
 import signal
+import webbrowser
 
 
 #Global Variable
@@ -72,10 +73,6 @@ def home():
         [sg.Text('Enter domain to be whitelisted:')],
         [sg.Input(key='-wl-', size = (36,1),enable_events= False,do_not_clear= False),sg.Button('Ok', bind_return_key= True,key = '-wlok-' )]
     ]
-
-    cmd1 = "su"
-    cmd2 = "systemctl stop named"
-    cmd3 = "systemctl stop named"
 
     layout = [
         [sg.Menu(menu_def, tearoff=True, text_color = '#2EBCBC')],
@@ -141,8 +138,8 @@ def home():
                 """
                 In production later use static dns server (eg:192.168.68.120) | For testing use 8.8.8.8 Google DNS 
                 """
-                # s.system('netsh interface ip set dns name="Wi-Fi" static 192.168.68.120')
-                s.system('netsh interface ip set dns name="Ethernet" static 8.8.8.8')
+                s.system('netsh interface ip set dns name="Wi-Fi" static 192.168.68.120')
+                #s.system('netsh interface ip set dns name="Ethernet" static 8.8.8.8')
                 process = subprocess.Popen(["env/Scripts/python", "dnsquery.py", "-d", dbuser])
 
             else:
@@ -150,10 +147,10 @@ def home():
                 print('SA DNS Filter is disbled!! ')
                 window['shld'].update( filename = r'.\Images\shldoff.png')
                 window.refresh()
-                s.system('netsh interface ip set dnsservers name="Ethernet" source=dhcp')
+                #s.system('netsh interface ip set dnsservers name="Ethernet" source=dhcp')
                 # process = subprocess.Popen(["./env/Scripts/python", "dnsquery.py", "-d", dbuser, "-e", csv_user])
                 # process2 = subprocess.Popen(["./env/Scripts/python", "updateDomain.py", csv_user, access_token])
-                # s.system('netsh interface ip set dnsservers name="Wi-Fi" source=dhcp')
+                s.system('netsh interface ip set dnsservers name="Wi-Fi" source=dhcp')
                 
 
         elif event == '-sv-':
@@ -221,11 +218,11 @@ def home():
                 status = "False"
                 putProfileConfig(access_token, malware, status)
         elif event == '-sson-':
-                print(' Safesearch is set to On')
+                print('Safesearch is set to On')
                 status = "True"
                 putProfileConfig(access_token, safesearch, status)
         elif event == '-ssoff-':
-                print(' Safesearch is set to Off')
+                print('Safesearch is set to Off')
                 status = "False"
                 putProfileConfig(access_token, safesearch, status)
     
@@ -283,7 +280,8 @@ def login():
         [sg.InputText(key='-usrnm-', justification='center', size=(100,1))],
         [sg.Text("Password", justification='center', size=(100,1))],
         [sg.InputText(key='-pwd-', password_char='*', justification='center', size=(100,1))],
-        [sg.Button('Ok', bind_return_key= True),sg.Button('Cancel')]
+        [sg.Button('Ok', bind_return_key= True),sg.Button('Cancel')],
+        [sg.Text("Don't have an account? Register Here", key = '-reg-', size=(100,1), enable_events = True, font = ('Courier New', 8, 'underline'))]
     ]
 
     window = sg.Window("SA DNS", layout,size=(300, 400), icon='./Images/favicon.ico')
@@ -292,6 +290,8 @@ def login():
         event,values = window.read()
         if event == "Cancel" or event == sg.WIN_CLOSED:
             break
+        elif event == '-reg-':
+            webbrowser.open("https://sadns.herokuapp.com/register/")
         elif  values['-usrnm-'] == "" or values['-pwd-'] == "":
              sg.popup('Required Fields', 'Username/password should not be empty', text_color = "#FF4242", icon='./Images/favicon.ico')
         else:
