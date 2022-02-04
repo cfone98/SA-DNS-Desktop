@@ -378,7 +378,7 @@ def ssh_cmnd():
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy()) # no known_hosts error
     ssh.connect(hostname, username=myuser, key_filename=mySSHK) 
 
-    stdin, stdout, stderr = ssh.exec_command("sudo -S  -p '' python3 /home/safwan/Documents/FYP/user.py")
+    stdin, stdout, stderr = ssh.exec_command("sudo -S  -p '' python3 /home/safwan/Documents/FYP/user.py "+ access_token)
     stdin.write("Opcar123\n")
     stdin.flush()
     ssh.close()
